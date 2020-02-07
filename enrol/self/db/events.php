@@ -15,15 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Self enrolment plugin version specification.
+ * This file defines observers needed by the plugin.
  *
- * @package    enrol_self
- * @copyright  2010 Petr Skoda  {@link http://skodak.org}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package enrol_self
+ * @copyright 2020 Gleimer Mora <gleimermora@catalyst-au.net>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2019111801;        // The current plugin version (Date: YYYYMMDDXX)
-$plugin->requires  = 2019111200;        // Requires this Moodle version
-$plugin->component = 'enrol_self';      // Full name of the plugin (used for diagnostics)
+$observers = [
+    [
+        'eventname' => '\core\event\course_updated',
+        'callback' => '\enrol_self\local\observer::course_enrol_key_update',
+    ],
+];

@@ -251,4 +251,67 @@ class enrol_self_external_testcase extends externallib_advanced_testcase {
         self::assertCount(0, $result['warnings']);
         self::assertEquals(1, $DB->count_records('user_enrolments', array('enrolid' => $instance3->id)));
     }
+
+    /**
+     * Test generate_key
+     */
+    public function test_generate_key() {
+        self::resetAfterTest(true);
+        $keylength = 10;
+        set_config('randomkeylen', $keylength, 'enrol_self');
+
+        // Test invalid course id.
+        $result = enrol_self_external::generate_key(500, 'course');
+        $result = external_api::clean_returnvalue(enrol_self_external::generate_key_returns(), $result);
+        self::assertEmpty($result['key']);
+        self::assertCount(1, $result['warnings']);
+
+        $courseidnumber = 123;
+        $course = self::getDataGenerator()->create_course(['idnumber' => $courseidnumber]);
+        $result = enrol_self_external::generate_key($course->id, 'course');
+        $result = external_api::clean_returnvalue(enrol_self_external::generate_key_returns(), $result);
+        self::assertEquals($keylength, strlen($result['key']));
+        self::assertCount(0, $result['warnings']);
+
+        // Test course enrol key template.
+        set_config('coursekeytemplate', 'idnumber', 'enrol_self');
+        $result = enrol_self_external::generate_key($course->id, 'course');
+        $result = external_api::clean_returnvalue(enrol_self_external::generate_key_returns(), $result);
+        self::assertStringStartsWith($courseidnumber . '-', $result['key']);
+        self::assertEquals($keylength, strlen($result['key']) - 4);
+        self::assertCount(0, $result['warnings']);
+
+        $groupidnumber = 456;
+        $group = $this->getDataGenerator()->create_group(['courseid' => $course->id, 'idnumber' => $groupidnumber]);
+
+        // Invalid context.
+        $result = enrol_self_external::generate_key($group->id, 'course');
+        $result = external_api::clean_returnvalue(enrol_self_external::generate_key_returns(), $result);
+        self::assertEmpty($result['key']);
+        self::assertCount(1, $result['warnings']);
+
+        // Setting groupkeytemplate not set.
+        $result = enrol_self_external::generate_key($group->id, 'group');
+        $result = external_api::clean_returnvalue(enrol_self_external::generate_key_returns(), $result);
+        self::assertEquals($keylength, strlen($result['key']));
+        self::assertCount(0, $result['warnings']);
+
+        // Set course idnumber for group enrol template.
+        set_config('groupkeytemplate', 'cidnumber', 'enrol_self');
+        $result = enrol_self_external::generate_key($group->id, 'group');
+        $result = external_api::clean_returnvalue(enrol_self_external::generate_key_returns(), $result);
+        $prefix = join('-', [$courseidnumber]);
+        self::assertStringStartsWith($prefix . '-', $result['key']);
+        self::assertEquals($keylength, strlen($result['key']) - 4);
+        self::assertCount(0, $result['warnings']);
+
+        // Set course and group idnumber for group enrol template.
+        set_config('groupkeytemplate', 'cidnumber,gidnumber', 'enrol_self');
+        $result = enrol_self_external::generate_key($group->id, 'group');
+        $result = external_api::clean_returnvalue(enrol_self_external::generate_key_returns(), $result);
+        $prefix = join('-', [$courseidnumber, $groupidnumber]);
+        self::assertStringStartsWith($prefix . '-', $result['key']);
+        self::assertEquals($keylength, strlen($result['key']) - 8);
+        self::assertCount(0, $result['warnings']);
+    }
 }

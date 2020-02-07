@@ -1200,6 +1200,10 @@ class restore_groups_structure_step extends restore_structure_step {
                                                FROM {groups}
                                               WHERE courseid = :courseid
                                                 AND name = :grname $description_clause", $params)) {
+            if (!empty($data->enrolmentkey) && get_config('enrol_self', 'regenerateonrestore')) {
+                $plugin = enrol_get_plugin('self');
+                $data->enrolmentkey = $plugin->get_enrol_key_from_template($data);
+            }
             // group doesn't exist, create
             $newitemid = $DB->insert_record('groups', $data);
             $restorefiles = true; // We'll restore the files

@@ -95,7 +95,7 @@ if (!empty($group->id)) {
 /// First create the form
 $editform = new group_form(null, array('editoroptions'=>$editoroptions));
 $editform->set_data($group);
-
+$PAGE->requires->js_call_amd('enrol_self/generatepassword', 'init', ['id' => $id, 'ctx' => 'group']);
 if ($editform->is_cancelled()) {
     redirect($returnurl);
 

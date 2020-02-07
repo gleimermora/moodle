@@ -118,4 +118,58 @@ if ($ADMIN->fulltree) {
             get_string('sendcoursewelcomemessage_help', 'enrol_self'),
             ENROL_SEND_EMAIL_FROM_COURSE_CONTACT,
             enrol_send_welcome_email_options()));
+
+    $settings->add(
+        new admin_setting_configmultiselect(
+            'enrol_self/coursekeytemplate',
+            get_string('keytemplate', 'enrol_self', 'Course'),
+            get_string('keytemplate_help', 'enrol_self', 'course'),
+            [],
+            ['idnumber' => '{idnumber}']
+        )
+    );
+
+    $settings->add(
+        new admin_setting_configmultiselect(
+            'enrol_self/groupkeytemplate',
+            get_string('keytemplate', 'enrol_self', 'Group'),
+            get_string('keytemplate_help', 'enrol_self', 'group'),
+            [],
+            ['cidnumber' => '{courseidnumber}', 'gidnumber' => '{groupidnumber}']
+        )
+    );
+
+    $settings->add(
+        new admin_setting_configtext(
+            'enrol_self/randomkeylen',
+            get_string('randomkeylen', 'enrol_self'),
+            get_string('randomkeylen_help', 'enrol_self'),
+            get_config('', 'minpasswordlength'),
+            PARAM_INT
+        )
+    );
+
+    $options = [
+        0 => get_string('never'),
+        1 => get_string('keynotused', 'enrol_self'),
+        2 => get_string('always'),
+    ];
+    $settings->add(
+        new admin_setting_configselect(
+            'enrol_self/regenerate',
+            get_string('regenerate', 'enrol_self'),
+            get_string('regenerate_help', 'enrol_self'),
+            0,
+            $options
+        )
+    );
+
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'enrol_self/regenerateonrestore',
+            get_string('restoreregenerate', 'enrol_self'),
+            get_string('restoreregenerate_help', 'enrol_self'),
+            0
+        )
+    );
 }

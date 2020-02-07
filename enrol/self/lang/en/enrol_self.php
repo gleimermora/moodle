@@ -124,3 +124,12 @@ If you have not done so already, you should edit your profile page so that we ca
 
   {$a->profileurl}';
 $string['privacy:metadata'] = 'The Self enrolment plugin does not store any personal data.';
+$string['keytemplate'] = '{$a} enrol key template';
+$string['keytemplate_help'] = 'Defines the template to be used when generating an {$a} enrol key.';
+$string['randomkeylen'] = 'Length random key';
+$string['randomkeylen_help'] = 'Specifies the length of the random part of the enrol key.';
+$string['keynotused'] = 'If key has not been used';
+$string['regenerate'] = 'Regenerate key';
+$string['regenerate_help'] = 'Allow to regenerate the key if any field from the template has been updated.';
+$string['restoreregenerate'] = 'Regenerate enrolment key on course restore.';
+$string['restoreregenerate_help'] = 'Regenerate key when restoring a course backup.';

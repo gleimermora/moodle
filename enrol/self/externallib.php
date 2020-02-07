@@ -254,4 +254,72 @@ class enrol_self_external extends external_api {
             )
         );
     }
+
+    /**
+     * Returns description of method parameters
+     *
+     * @return external_function_parameters
+     */
+    public static function generate_key_parameters() {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'Course or Group id'),
+            'ctx' => new external_value(PARAM_TEXT, 'Context'),
+        ]);
+    }
+
+    /**
+     * Generates a random enrol key.
+     *
+     * @param int $id
+     * @param string $ctx
+     * @return array
+     * @throws invalid_parameter_exception
+     */
+    public static function generate_key($id, $ctx) {
+        $warnings = [];
+        $key = '';
+        $params = self::validate_parameters(self::generate_key_parameters(), ['id' => $id, 'ctx' => $ctx]);
+        try {
+            $obj = null;
+            if ($ctx === 'course') {
+                $obj = get_course($params['id']);
+            } else if ($ctx === 'group') {
+                // New group.
+                if (0 === $params['id']) {
+                    $len = get_config('enrol_self', 'randomkeylen');
+                    return ['key' => generate_password($len), 'warnings' => $warnings];
+                }
+                $obj = groups_get_group($params['id']);
+            }
+            $enrol = enrol_get_plugin('self');
+            if (empty($enrol) || empty($obj)) {
+                throw new moodle_exception('canntenrol', 'enrol_self');
+            }
+            $key = $enrol->get_enrol_key_from_template($obj);
+        } catch (moodle_exception $e) {
+            $warnings[] = [
+                'warningcode' => '5',
+                'message' => 'Item not found.',
+            ];
+        }
+
+        return [
+            'key' => $key,
+            'warnings' => $warnings,
+        ];
+    }
+
+    /**
+     * Returns a random enrol key.
+     *
+     * @return external_single_structure
+     */
+    public static function generate_key_returns() {
+        return new external_single_structure(
+            [
+                'key' => new external_value(PARAM_TEXT, 'Generated enrolment key'),
+                'warnings' => new external_warnings()
+            ]
+        );
+    }
 }

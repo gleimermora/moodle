@@ -68,6 +68,7 @@ $string['optional'] = 'Optional';
 $string['othersettings'] = 'Other settings';
 $string['passwordunmaskedithint'] = 'Edit password';
 $string['passwordunmaskrevealhint'] = 'Reveal';
+$string['passwordunmaskgeneratehint'] = 'Generate';
 $string['passwordunmaskinstructions'] = 'Press enter to save changes';
 $string['privacy:metadata:preference:filemanager_recentviewmode'] = 'Recently selected view mode of the file picker element.';
 $string['privacy:preference:filemanager_recentviewmode'] = 'Your preferred way of displaying files in the file picker is: {$a}';

@@ -2594,9 +2594,12 @@ function update_course($data, $editoroptions = NULL) {
     $event = \core\event\course_updated::create(array(
         'objectid' => $course->id,
         'context' => context_course::instance($course->id),
-        'other' => array('shortname' => $course->shortname,
-                         'fullname' => $course->fullname,
-                         'updatedfields' => $updatedfields)
+        'other' => [
+            'shortname' => $course->shortname,
+            'fullname' => $course->fullname,
+            'updatedfields' => $updatedfields,
+            'olddata' => (array)$oldcourse,
+        ],
     ));
 
     $event->set_legacy_logdata(array($course->id, 'course', 'update', 'edit.php?id=' . $course->id, $course->id));

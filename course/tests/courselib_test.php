@@ -1875,6 +1875,7 @@ class core_course_courselib_testcase extends advanced_testcase {
         $course = $this->getDataGenerator()->create_course((object)['visible' => 1]);
 
         $editedcourse = $DB->get_record('course', ['id' => $course->id]);
+        $oldcourse = course_get_format($course->id)->get_course();
         $editedcourse->visible = 0;
 
         // Update course and catch course_updated event.
@@ -1890,7 +1891,8 @@ class core_course_courselib_testcase extends advanced_testcase {
             'fullname' => $course->fullname,
             'updatedfields' => [
                 'visible' => 0
-            ]
+            ],
+            'olddata' => (array)$oldcourse,
         ];
         $this->assertEquals($otherdata, $event->other);
 

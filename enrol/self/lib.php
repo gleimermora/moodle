@@ -326,10 +326,103 @@ class enrol_self_plugin extends enrol_plugin {
         $fields = $this->get_instance_defaults();
 
         if ($this->get_config('requirepassword')) {
-            $fields['password'] = generate_password(20);
+            $fields['password'] = $this->get_enrol_key_from_template($course);
         }
 
         return $this->add_instance($course, $fields);
+    }
+
+    /**
+     * Generate an enrol key base on the config('enrol_self|keytemplate').
+     * @param stdClass $object
+     * @return string
+     * @throws dml_exception
+     */
+    public function get_enrol_key_from_template($object) {
+        global $DB;
+        $templatetokens = get_config('enrol_self', 'coursekeytemplate');
+        $isgroup = false;
+        if (property_exists($object, 'enrolmentkey') && !empty($object->courseid)) {
+            $isgroup = true;
+            $templatetokens = get_config('enrol_self', 'groupkeytemplate');
+        }
+        $len = (int)get_config('enrol_self', 'randomkeylen');
+        $minpasswordlength = get_config('', 'minpasswordlength');
+        if ($len < $minpasswordlength) {
+            $len = $minpasswordlength;
+        }
+
+        $key = generate_password($len);
+        if (empty($templatetokens)) {
+            return $key;
+        }
+
+        $templatetokens = explode(',', $templatetokens);
+        $tokens = [];
+        foreach ($templatetokens as $tokenname) {
+            if ($isgroup) {
+                if ('cidnumber' === $tokenname) {
+                    $course = $DB->get_record('course', ['id' => $object->courseid], 'idnumber', MUST_EXIST);
+                    if (!empty($course->idnumber)) {
+                        $tokens[] = $course->idnumber;
+                    }
+                    continue;
+                }
+                if ('gidnumber' === $tokenname) {
+                    $tokenname = 'idnumber';
+                }
+            }
+            if (empty($object->$tokenname)) {
+                continue;
+            }
+            $tokens[] = $object->$tokenname;
+        }
+        $tokens[] = $key;
+        return implode('-', $tokens);
+    }
+
+    /**
+     * Checks if any tokens from the the config('enrol_self|keytemplate') has changed
+     *
+     * @param array $oldcourse
+     * @param array $updatedfields
+     * @return void|null
+     * @throws dml_exception
+     */
+    public function update_password_for_instance(array $oldcourse, array $updatedfields) {
+        $templatetokens = explode(',', get_config('enrol_self', 'coursekeytemplate'));
+        if (empty($templatetokens)) {
+            return;
+        }
+        $instances = enrol_get_instances($oldcourse['id'], true);
+        foreach ($instances as $instance) {
+            if (empty($instance->password)) {
+                return;
+            }
+            $password = $instance->password;
+            $randompart = $password;
+            $tokenvalues = [];
+            foreach ($templatetokens as $templatetoken) {
+                if ($templatetoken === 'random' || $oldcourse[$templatetoken] === $updatedfields[$templatetoken]) {
+                    continue;
+                }
+                if (!empty($updatedfields[$templatetoken])) {
+                    $tokenvalues[] = $updatedfields[$templatetoken];
+                }
+                if (strpos($password, $oldcourse[$templatetoken] . '-') === 0) {
+                    $randompart = substr($password, strpos($password, '-') + 1);
+                }
+            }
+            $newpassword = $randompart;
+            if (!empty($tokenvalues)) {
+                $tokenvalues = array_merge($tokenvalues, [$randompart]);
+                $newpassword = implode('-', $tokenvalues);
+            }
+            $data = new stdClass();
+            $data->password = $newpassword;
+            $data->expirynotify = $instance->expirynotify;
+            $this->update_instance($instance, $data);
+        }
     }
 
     /**
@@ -546,6 +639,11 @@ class enrol_self_plugin extends enrol_plugin {
                     // Use some id that can not exist in order to prevent self enrolment,
                     // because we do not know what cohort it is in this site.
                     $data->customint5 = -1;
+                }
+            }
+            if ($this->get_config('regenerateonrestore', false)) {
+                if (!empty($data->password)) {
+                    $data->password = $this->get_enrol_key_from_template($course);
                 }
             }
             $instanceid = $this->add_instance($course, (array)$data);

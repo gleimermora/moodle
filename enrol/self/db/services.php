@@ -40,5 +40,15 @@ $functions = array(
         'description' => 'Self enrol the current user in the given course.',
         'type'        => 'write',
         'services'    => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
-    )
+    ),
+
+    'enrol_self_generate_key' => [
+        'classname' => 'enrol_self_external',
+        'methodname' => 'generate_key',
+        'classpath' => 'enrol/self/externallib.php',
+        'description' => 'Generates a self enrolment key.',
+        'type' => 'read',
+        'ajax' => true,
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ]
 );

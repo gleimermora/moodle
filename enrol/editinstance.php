@@ -101,6 +101,12 @@ if ($mform->is_cancelled()) {
 
 $PAGE->set_heading($course->fullname);
 $PAGE->set_title(get_string('pluginname', 'enrol_' . $type));
+if ('self' === $type && !empty($course->id)) {
+    $PAGE->requires->js_call_amd(
+        'enrol_self/generatepassword',
+        'init', ['id' => $course->id, 'context' => 'course']
+    );
+}
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('pluginname', 'enrol_' . $type));
